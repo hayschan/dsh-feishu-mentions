@@ -1,20 +1,26 @@
 # DeepSeek Harness 飞书引用
 
-周五要试产，你想让 DeepSeek 从评审纪要里列出待办。在对话框输入 `@评审`，看一眼作者，选中「首批试产评审纪要」，接着写「列出试产前的待办」。同一个输入框也能找群聊、同事、表格和知识空间。
+周五要试产，你想确认还有哪些物料没到。在 DeepSeek Harness 输入 `@物料`，选中「试产物料跟踪表」，接着写「列出还没到齐的物料」。同一个输入框也能找群聊、同事、表格和知识空间。
 
 [安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
 
 ## 引用文档，输入标题里的几个字
 
-手动引用要去飞书搜索、打开文档，点「分享 → 复制链接」，再切回 Harness 粘贴。装上插件，在写问题的地方输入 `@评审` 就能选文档。两份纪要名字相近时，作者和修改时间可以帮你认出要用的那份。
+在飞书里，先搜到「试产物料跟踪表」，打开表格，点右上角的「分享」，再从分享面板底部复制链接。用插件时，在写问题的地方输入 `@物料`，看一眼作者和修改时间就能选中。点击任一动图可以单独放大查看。
 
-![文档引用流程对比。左侧在飞书搜索并打开《首批试产评审纪要》，从分享面板复制链接，回到 Harness 粘贴。右侧在对话框输入 @评审，选中纪要并写下「列出试产前的待办」。](docs/images/mention-document.gif)
+<p align="center">
+  <a href="docs/images/feishu-document-manual.webp"><img src="docs/images/feishu-document-manual.webp" width="45%" alt="手动复制：在飞书云文档搜索物料，打开跟踪表，从分享文档面板复制链接，再回到 Harness 粘贴。"></a>&emsp;&ensp;
+  <a href="docs/images/harness-document-direct.webp"><img src="docs/images/harness-document-direct.webp" width="45%" alt="在对话框直接引用：输入 @物料，选中试产物料跟踪表，接着写「列出还没到齐的物料」。"></a>
+</p>
 
 ## 引用群聊，认出群头像就能选
 
-手动找群聊 ID 要搜索群名、打开右上角「···」、把群设置滚到底，再复制会话 ID。现在输入 `@协调`，选中「试产协调群」，接着问「哪些物料还没到齐？」。
+手动找会话 ID，要搜到「试产协调群」，打开右上角的「···」，把右侧设置滚到底，再点 ID 旁的复制图标。用插件时，输入 `@协调` 就能按头像和群名选择，接着问「哪些物料还没到齐？」。
 
-![群聊引用流程对比。左侧在飞书进入试产协调群，打开群设置，滚到最下方复制会话 ID，回到 Harness 粘贴。右侧在 Harness 输入 @协调，按群头像和群名选中，接着写物料问题。](docs/images/mention-chat.gif)
+<p align="center">
+  <a href="docs/images/feishu-chat-manual.webp"><img src="docs/images/feishu-chat-manual.webp" width="45%" alt="手动复制：在飞书搜索试产协调群，打开右上角设置，滚到底部复制会话 ID，再回到 Harness 粘贴。"></a>&emsp;&ensp;
+  <a href="docs/images/harness-chat-direct.webp"><img src="docs/images/harness-chat-direct.webp" width="45%" alt="在对话框直接引用：输入 @协调，选中试产协调群，接着写「哪些物料还没到齐？」。"></a>
+</p>
 
 如果希望把评审纪要正文或最近的群消息也一起发给模型，选择 `@摘录:评审` 或 `@摘录:协调`。动图按飞书与 Harness 的界面和操作重绘，使用虚构的试产项目资料。[飞书的文档分享说明](https://www.feishu.cn/hc/zh-CN/articles/360049067526)
 
