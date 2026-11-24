@@ -276,7 +276,7 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      inject: ['inputTriggers'],
+      inject: ['inputTriggers', 'slots', 'remote', 'remote.pluginManager'],
       apply(ctx) {
         ctx.effect(() => {
           const style = document.createElement('style')
