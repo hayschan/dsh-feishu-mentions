@@ -28,14 +28,17 @@ window.__ModuleLoader__.load({
         throw new Error('飞书插件未连接，请重新打开 Harness 工作区。')
       }
       const result = await response.json()
-      if (!response.ok) throw new Error(result.error || '读取失败，请重试。')
+      if (!response.ok) throw new Error(result?.error || '读取失败，请重试。')
+      if (action === 'search' ? !Array.isArray(result?.data) : typeof result?.data?.text !== 'string') {
+        throw new Error('飞书插件返回了无法识别的数据，请重试。')
+      }
       return result.data
     }
 
     function excerptId(item) {
       if (item.kind === 'chat') return item.chat_id
       if (item.kind === 'wiki' && ['wiki', 'docx', 'doc'].includes(item.type)) {
-        return new URL(item.url).pathname.match(/^\/wiki\/([A-Za-z0-9]+)\/?$/)?.[1]
+        try { return new URL(item.url).pathname.match(/^\/wiki\/([A-Za-z0-9]+)\/?$/)?.[1] } catch { return }
       }
       if (['doc', 'docx'].includes(item.kind)) return item.token
     }
@@ -170,7 +173,7 @@ window.__ModuleLoader__.load({
                 recent.set(term, { rows, expires: Date.now() + 15000 })
               }
             }
-            const items = rows.filter(item => !withExcerpt || excerptId(item)).map(item => {
+            const items = rows.filter(item => typeof item?.title === 'string' && item.title && typeof item.kind === 'string' && (!withExcerpt || excerptId(item))).map(item => {
               const { detail, image, ...ref } = item
               return {
                 section, name: ref.title, icon: rowIcon(source, ref.title, image),

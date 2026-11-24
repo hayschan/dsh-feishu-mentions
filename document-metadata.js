@@ -12,11 +12,11 @@ export async function documentAuthors(results, searchArgs, signal, run) {
 
   for (const result of results) {
     const m = result.result_meta
-    if (!m?.token || !m.url) continue
+    if (typeof m?.token !== 'string' || typeof m.url !== 'string') continue
     const wikiToken = /^https:\/\/[^/]+\/wiki\/([a-z0-9]+)(?=[/?#]|$)/i.exec(m.url)?.[1]
     const people = [[m.owner_id, m.owner_name], [m.edit_user_id, m.edit_user_name]]
-    for (const [id, name] of people) if (id && name) names.set(id, name)
-    if (m.original_creator_name) {
+    for (const [id, name] of people) if (typeof id === 'string' && typeof name === 'string' && name) names.set(id, name)
+    if (typeof m.original_creator_name === 'string' && m.original_creator_name) {
       authors.set(m.token, m.original_creator_name)
     } else if (m.original_creator_id) {
       creatorIds.set(m.token, m.original_creator_id)
@@ -28,7 +28,7 @@ export async function documentAuthors(results, searchArgs, signal, run) {
     } else if (m.doc_types === 'DOC' && /^[a-zA-Z0-9]+$/.test(m.token)) {
       tasks.push(async () => {
         const doc = await run(['api', 'GET', '/open-apis/doc/v2/meta/' + m.token], optional)
-        if (doc.create_user_name) authors.set(m.token, doc.create_user_name)
+        if (typeof doc.create_user_name === 'string' && doc.create_user_name) authors.set(m.token, doc.create_user_name)
         else if (doc.creator) creatorIds.set(m.token, doc.creator)
       })
     } else {
@@ -43,7 +43,7 @@ export async function documentAuthors(results, searchArgs, signal, run) {
     tasks.push(async () => {
       const data = await run(['drive', '+search', ...searchArgs, '--original-creator-ids', id, '--page-size', '30'], optional)
       for (const result of data.results) {
-        const token = result.result_meta?.token
+        const token = result?.result_meta?.token
         if (standalone.has(token)) authors.set(token, names.get(id))
       }
     })
@@ -60,7 +60,7 @@ export async function documentAuthors(results, searchArgs, signal, run) {
   if (unknown.length && !optional.aborted) {
     try {
       const data = await run(['contact', '+search-user', '--user-ids', unknown.join(',')], optional)
-      for (const u of data.users) if (u.localized_name) names.set(u.open_id, u.localized_name)
+      for (const u of data.users) if (typeof u?.localized_name === 'string' && u.localized_name) names.set(u.open_id, u.localized_name)
     } catch { /* Directory visibility can differ from document visibility. */ }
   }
   signal?.throwIfAborted()

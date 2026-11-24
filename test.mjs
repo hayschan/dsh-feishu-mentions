@@ -274,3 +274,44 @@ test('null chat lists produce normal empty menu states', async () => {
   assert.equal(empty.name, '没有匹配的飞书群聊')
   assert.equal(group.onPick({ candidate: empty }), undefined)
 })
+
+test('all search sources tolerate empty lists and isolate malformed rows', async () => {
+  const cases = [
+    ['person', 'users', { ...person, department: {} }, { ...person, localized_name: 7 }],
+    ['chat', 'chats', { chat_id: chat.chat_id, name: chat.title, description: false }, { name: 1 }],
+    ['drive', 'results', doc, { title: 7, result_meta: {} }],
+    ['space', 'spaces', { space_id: '123', name: '示例空间', description: {} }, { space_id: '123', name: 1 }],
+  ]
+  for (const [source, key, valid, invalid] of cases) {
+    for (const payload of [{}, { [key]: null }, { [key]: [] }]) {
+      assert.deepEqual(await search(source, '', signal, async () => payload), [])
+    }
+    for (const payload of [null, { [key]: {} }]) {
+      await assert.rejects(search(source, '', signal, async () => payload), /无法识别的搜索结果/)
+    }
+    const rows = await search(source, '', signal, async () => ({ [key]: [null, invalid, valid] }))
+    assert.equal(rows.length, 1)
+    assert.equal(typeof rows[0].title, 'string')
+  }
+})
+
+test('excerpt handles null rows and rejects unreadable content clearly', async () => {
+  const params = new URLSearchParams({ kind: 'chat', id: chat.chat_id })
+  const result = await excerpt(params, signal, async () => ({ messages: [null, { content: '可读消息' }] }))
+  assert.equal(result.text, '可读消息')
+  await assert.rejects(excerpt(params, signal, async () => ({ messages: [{ content: {} }] })), /无法识别的消息内容/)
+  await assert.rejects(excerpt(params, signal, async () => null), /无法识别的消息格式/)
+  await assert.rejects(excerpt(new URLSearchParams({kind: 'docx', id: 'demo'}), signal, async () => null), /未返回可摘录/)
+})
+
+test('malformed host replies are retryable and invalid wiki rows do not hide valid excerpts', async () => {
+  let response = null
+  const sources = await clientSources(() => Response.json(response))
+  const drive = sources.find(s => s.name === 'feishu-drive')
+  const ask = () => drive.candidates(signal, {query: '摘录:', signal})
+  assert.match((await ask())[0].description, /无法识别的数据/)
+  response = {data: [null, {kind: 'wiki', type: 'docx', title: '异常', url: 'invalid'},
+    {kind: 'docx', title: '示例', token: 'demo'}]}
+  const rows = await ask()
+  assert.deepEqual(Array.from(rows, r => r.name), ['示例'])
+})

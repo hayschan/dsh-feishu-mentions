@@ -39,14 +39,25 @@ export async function cli(args, signal) {
   }
   let envelope
   try { envelope = JSON.parse(stdout) } catch { throw new Error('飞书 CLI 未返回 JSON，请检查版本。') }
-  if (!envelope.ok || !envelope.data) throw new Error('飞书 CLI 没有返回有效结果。')
+  if (!envelope?.ok || !envelope.data || typeof envelope.data !== 'object' || Array.isArray(envelope.data)) throw new Error('飞书 CLI 没有返回有效结果。')
   return envelope.data
+}
+
+function text(value) {
+  return typeof value === 'string' ? value : ''
+}
+
+function searchRows(data, key) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('飞书返回了无法识别的搜索结果。')
+  const rows = data[key] ?? []
+  if (!Array.isArray(rows)) throw new Error('飞书返回了无法识别的搜索结果。')
+  return rows.filter(row => row && typeof row === 'object' && !Array.isArray(row))
 }
 
 function docReference(row, authors) {
   const meta = row.result_meta ?? {}
-  const title = (row.title ?? row.title_highlighted ?? '').replace(/<\/?hb?>/gi, '')
-  if (!title || !meta.url || !meta.token) return
+  const title = (text(row.title) || text(row.title_highlighted)).replace(/<\/?hb?>/gi, '')
+  if (!title || !text(meta.url) || !text(meta.token)) return
   let url
   try { url = new URL(meta.url) } catch { return }
   if (url.protocol !== 'https:') return
@@ -54,7 +65,7 @@ function docReference(row, authors) {
   const kind = url.pathname.startsWith('/wiki/') ? 'wiki' : type
   // The Wiki search token can identify the underlying object. Keep the node URL too.
   return { kind, title, token: meta.token, url: url.href, type, image: documentIcon(type, title, meta.icon_info),
-    author: authors.get(meta.token), owner: meta.owner_name || undefined, modified_at: modifiedTime(meta),
+    author: authors.get(meta.token), owner: text(meta.owner_name) || undefined, modified_at: modifiedTime(meta),
     detail: typeLabels.get(type) || '文件' }
 }
 
@@ -67,7 +78,7 @@ async function contactAvatars(users, signal, run) {
     const optional = signal ? AbortSignal.any([signal, deadline]) : deadline
     const rows = await run(['api', 'GET', '/open-apis/contact/v3/users/batch', '--params', params,
       '--jq', '{ok:.ok,data:{items:[.data.items[]|{open_id,avatar:.avatar.avatar_72}]}}'], optional)
-    return new Map(rows.items.map(row => [row.open_id, avatarUrl(row.avatar)]))
+    return new Map(searchRows(rows, 'items').map(row => [row.open_id, avatarUrl(row.avatar)]))
   } catch {
     signal?.throwIfAborted()
     return new Map()
@@ -79,27 +90,27 @@ export async function search(source, query, signal, run = cli) {
   switch (source) {
     case 'person': {
       const data = await run(['contact', '+search-user', ...(query ? ['--query', query] : ['--has-chatted']), ...page], signal)
-      const users = data.users.filter(u => u.open_id && u.localized_name)
+      const users = searchRows(data, 'users').filter(u => text(u.open_id) && text(u.localized_name))
       const avatars = await contactAvatars(users, signal, run)
       return users.map(u => ({
         kind: 'person', title: u.localized_name, open_id: u.open_id, image: avatars.get(u.open_id),
-        ...(u.p2p_chat_id && { p2p_chat_id: u.p2p_chat_id }), department: u.department?.trim() || undefined,
+        ...(text(u.p2p_chat_id) && { p2p_chat_id: u.p2p_chat_id }), department: text(u.department).trim() || undefined,
       }))
     }
     case 'chat': {
       const action = query ? ['+chat-search', '--query', query, '--disable-search-by-user'] : ['+chat-list', '--sort', 'active_time']
       const data = await run(['im', ...action, ...page], signal)
-      if (data.chats === null) return []
-      return data.chats.filter(c => c.chat_id && c.name).map(c => ({
-        kind: 'chat', title: c.name, chat_id: c.chat_id, image: avatarUrl(c.avatar), detail: c.description?.slice(0, 70) || undefined,
+      return searchRows(data, 'chats').filter(c => text(c.chat_id) && text(c.name)).map(c => ({
+        kind: 'chat', title: c.name, chat_id: c.chat_id, image: avatarUrl(c.avatar), detail: text(c.description).slice(0, 70) || undefined,
       }))
     }
     case 'drive': {
       if ([...query].length > 30) throw new Error('文档搜索最多支持 30 个字，请缩短关键词。')
       const action = query ? ['--query', query] : ['--opened-since', '1m', '--sort', 'open_time']
       const data = await run(['drive', '+search', ...action, ...page], signal)
-      const authors = await documentAuthors(data.results, action, signal, run)
-      return data.results.map(row => docReference(row, authors)).filter(Boolean)
+      const rows = searchRows(data, 'results')
+      const authors = await documentAuthors(rows, action, signal, run)
+      return rows.map(row => docReference(row, authors)).filter(Boolean)
     }
     case 'space': {
       const result = []
@@ -107,13 +118,13 @@ export async function search(source, query, signal, run = cli) {
       const seen = new Set()
       do {
         const data = await run(['wiki', '+space-list', '--page-size', '50', ...(cursor ? ['--page-token', cursor] : [])], signal)
-        for (const s of data.spaces) {
-          if (s.space_id && s.name && s.name.toLowerCase().includes(query.toLowerCase())) {
-            result.push({ kind: 'space', title: s.name, space_id: s.space_id, image: documentIcon('space'), detail: s.description?.slice(0, 70) || undefined })
+        for (const s of searchRows(data, 'spaces')) {
+          if ((text(s.space_id) || Number.isSafeInteger(s.space_id)) && text(s.name) && s.name.toLowerCase().includes(query.toLowerCase())) {
+            result.push({ kind: 'space', title: s.name, space_id: s.space_id, image: documentIcon('space'), detail: text(s.description).slice(0, 70) || undefined })
           }
           if (result.length >= (query ? 8 : 3)) return result
         }
-        cursor = data.has_more && data.page_token
+        cursor = data.has_more && text(data.page_token)
         if (seen.has(cursor)) break
         seen.add(cursor)
       } while (cursor)
@@ -139,15 +150,19 @@ export async function excerpt(params, signal, run = cli) {
   const id = params.get('id') ?? ''
   if (params.get('kind') === 'chat' && /^oc_[A-Za-z0-9_-]{1,120}$/.test(id)) {
     const data = await run(['im', '+chat-messages-list', '--chat-id', id, '--page-size', '10', '--order', 'desc', '--no-reactions'], signal)
-    if (!Array.isArray(data.messages)) throw new Error('群聊返回了无法识别的消息格式。')
-    const lines = data.messages.slice(0, 10).reverse().map(m => [m.create_time, m.sender?.name, m.content].filter(Boolean).join(' '))
+    if (!Array.isArray(data?.messages)) throw new Error('群聊返回了无法识别的消息格式。')
+    const lines = data.messages.slice(0, 10).reverse().filter(m => m != null).map(m => {
+      if (typeof m.content !== 'string') throw new Error('群聊返回了无法识别的消息内容。')
+      const time = typeof m.create_time === 'number' ? m.create_time : text(m.create_time)
+      return [time, text(m.sender?.name), m.content].filter(Boolean).join(' ')
+    })
     return { scope: '最近最多 10 条群消息，按时间正序', ...bounded(lines.join('\n')), has_more: Boolean(data.has_more) }
   }
   if (['wiki', 'docx', 'doc'].includes(params.get('kind')) && /^[A-Za-z0-9]{1,128}$/.test(id)) {
     // docs +fetch accepts a Wiki node URL and resolves it to the document.
     const target = params.get('kind') === 'wiki' ? 'https://www.feishu.cn/wiki/' + id : id
     const data = await run(['docs', '+fetch', '--doc', target, '--doc-format', 'markdown'], signal)
-    if (typeof data.document?.content !== 'string') throw new Error('此对象未返回可摘录的文档正文。')
+    if (typeof data?.document?.content !== 'string') throw new Error('此对象未返回可摘录的文档正文。')
     return { scope: '文档正文前 6000 个字符', revision: data.document.revision_id, ...bounded(data.document.content) }
   }
   throw new Error('此引用不支持正文摘录，请选择飞书文档或群聊。')
