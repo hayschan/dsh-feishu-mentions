@@ -1,0 +1,3 @@
+- insert:
+    - id: feishu-mentions
+      name: '@local/dsh-feishu-mentions'

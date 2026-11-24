@@ -1,0 +1,52 @@
+{
+  "name": "@local/dsh-feishu-mentions",
+  "version": "0.4.0",
+  "description": "Feishu references in the DeepSeek Harness composer",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "dsh": ">=0.2.2-rc.5 <0.3.0",
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "lark.js",
+    "document-metadata.js",
+    "visuals.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale",
+    "icon.svg",
+    "icons"
+  ],
+  "scripts": {
+    "test": "node --test test.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-input-trigger"
+      ]
+    }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hayschan/dsh-feishu-mentions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hayschan/dsh-feishu-mentions/issues"
+  },
+  "homepage": "https://github.com/hayschan/dsh-feishu-mentions#readme"
+}
