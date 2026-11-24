@@ -2,7 +2,7 @@
 
 周五要试产，你想确认还有哪些物料没到。在 DeepSeek Harness 输入 `@物料`，选中「试产物料跟踪表」，接着写「列出还没到齐的物料」。同一个输入框也能找群聊、同事、表格和知识空间。
 
-[观看或保存 23 秒演示（1080p MP4）](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-mentions-demo.mp4) · [安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
+[观看或保存 35 秒演示（1080p MP4）](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-mentions-demo.mp4) · [安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
 
 ## 引用文档，输入标题里的几个字
 
@@ -22,6 +22,14 @@
   <a href="docs/images/harness-chat-direct.webp"><img src="docs/images/harness-chat-direct.webp" width="45%" alt="在对话框直接引用：输入 @协调，选中试产协调群，接着写「哪些物料还没到齐？」。"></a>
 </p>
 
+## 引用同事，只记得拼音也能找
+
+想问「林澈负责哪些试产物料？」在对话框里输入 `@林澈`、`@linche` 或 `@lc` 都可以。看一眼头像和姓名旁的「产品工程部」，选中林澈，接着写问题。首字母相同的同事可能有好几位，部门可以帮你选对人。
+
+<p align="center">
+  <a href="docs/images/harness-person-direct.webp"><img src="docs/images/harness-person-direct.webp" width="72%" alt="在 Harness 依次输入 @林澈、@linche、@lc，三次都选中产品工程部的林澈，最后问他负责哪些试产物料。"></a>
+</p>
+
 如果希望把评审纪要正文或最近的群消息也一起发给模型，选择 `@摘录:评审` 或 `@摘录:协调`。动图按飞书与 Harness 的界面和操作重绘，使用虚构的试产项目资料。[飞书的文档分享说明](https://www.feishu.cn/hc/zh-CN/articles/360049067526)
 
 <details>
@@ -31,6 +39,7 @@
 | --- | --- | --- |
 | 引用云文档 | [下载飞书操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-document-manual.mp4) | [下载 Harness 操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-document-direct.mp4) |
 | 引用群聊 | [下载飞书操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-chat-manual.mp4) | [下载 Harness 操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-chat-direct.mp4) |
+| 引用同事 | — | [下载姓名、全拼和首字母演示](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-person-direct.mp4) |
 
 </details>
 
@@ -58,6 +67,7 @@
 | --- | --- |
 | `@` | 最近联系过的人、活跃群聊、近一个月打开的资料和可见知识空间 |
 | `@试产` | 跨类别搜索，可用鼠标或方向键和回车选择 |
+| `@林澈`、`@linche`、`@lc` | 用中文姓名、全拼或拼音首字母查找同事 |
 | `@人:名字`、`@群:关键词` | 限定为联系人或群聊 |
 | `@文档:关键词`、`@知识库:关键词` | 搜索云盘文件与知识库页面，或按名称查找知识空间 |
 | `@摘录:关键词` | 选择文档或群聊，在发送时附上摘录 |
