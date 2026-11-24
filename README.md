@@ -70,7 +70,7 @@ https://github.com/user-attachments/assets/fa061ee7-3d42-4357-915c-d74068a7d0e5
 2. 在桌面版打开 **插件 → 添加插件**，粘贴下面的安装地址，点击 **安装 → 立即启用**。其他版本的安装包见 [Releases](https://github.com/hayschan/dsh-feishu-mentions/releases)。
 
    ```text
-   https://github.com/hayschan/dsh-feishu-mentions/releases/download/v0.4.0/dsh-feishu-mentions-0.4.0.tgz
+   https://github.com/hayschan/dsh-feishu-mentions/releases/download/v0.4.1/dsh-feishu-mentions-0.4.1.tgz
    ```
 
 3. 打开一个工作区，输入 `@`。看到飞书联系人、群聊和云盘资料后，选中一项就可以开始提问。
