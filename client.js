@@ -13,7 +13,7 @@ window.__ModuleLoader__.load({
         const timer = setTimeout(() => {
           signal.removeEventListener('abort', cancel)
           resolve()
-        }, 220)
+        }, 100)
         function cancel() { clearTimeout(timer); reject(signal.reason) }
         signal.addEventListener('abort', cancel, { once: true })
       })
@@ -139,18 +139,37 @@ window.__ModuleLoader__.load({
     function makeSource(source, order) {
       const [section, prefix, icon] = groups[source]
       const name = 'feishu-' + source
+      const recent = new Map()
+      let activeSession
       return {
         trigger: '@', name, order, showGroupTitle: false,
-        async candidates(_session, { query, drilled, signal }) {
+        async candidates(session, { query, drilled, signal }) {
           if (drilled || /[\\/]/.test(query) || query.startsWith('~')) return []
           const tag = /^(人|群|文档|知识库|摘录)[:：](.*)$/u.exec(query)
           const withExcerpt = tag?.[1] === '摘录'
           if (withExcerpt && !['drive', 'chat'].includes(source)) return []
           if (tag && !withExcerpt && tag[1] !== prefix) return []
           const term = (tag ? tag[2] : query).trim()
-          await debounce(signal)
+          signal.throwIfAborted()
+          if (activeSession !== session) {
+            recent.clear()
+            activeSession = session
+          }
           try {
-            const rows = await request('search', { source, q: term }, signal)
+            const cached = recent.get(term)
+            let rows
+            if (cached && cached.expires > Date.now()) {
+              rows = cached.rows
+            } else {
+              if (term) await debounce(signal)
+              rows = await request('search', { source, q: term }, signal)
+              signal.throwIfAborted()
+              if (activeSession === session) {
+                recent.delete(term)
+                if (recent.size >= 32) recent.delete(recent.keys().next().value)
+                recent.set(term, { rows, expires: Date.now() + 15000 })
+              }
+            }
             const items = rows.filter(item => !withExcerpt || excerptId(item)).map(item => {
               const { detail, image, ...ref } = item
               return {

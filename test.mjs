@@ -239,3 +239,38 @@ test('independent native sources, cancellation, label restoration, failure and s
   assert.equal(withoutDepartment.description, undefined)
   assert.equal(people.onPick({ candidate: withDepartment }).insert.label, '@示例用户甲')
 })
+
+test('repeat searches reuse rows across modes until expiry or session change', async () => {
+  let now = 1000
+  let calls = 0
+  class Clock extends Date { static now() { return now } }
+  const sources = await clientSources(() => {
+    calls++
+    return Response.json({ data: [chat] })
+  }, {}, Clock)
+  const group = sources.find(source => source.name === 'feishu-chat')
+  const session = {}
+  const ask = (query, scope = session) => group.candidates(scope, { query, signal })
+  await ask('群:演示')
+  const [row] = await ask('摘录:演示')
+  assert.equal(JSON.parse(row.value).withExcerpt, true)
+  assert.equal(calls, 1)
+  now += 15001
+  await ask('群:演示')
+  await ask('群:演示', {})
+  assert.equal(calls, 3)
+})
+
+test('null chat lists produce normal empty menu states', async () => {
+  const sources = await clientSources(async url => {
+    const query = new URL(url).searchParams.get('q')
+    return Response.json({ data: await search('chat', query, signal, async () => ({ chats: null })) })
+  })
+  const group = sources.find(source => source.name === 'feishu-chat')
+  for (const query of ['', '示例']) {
+    assert.equal((await group.candidates({}, { query, signal })).length, 0)
+  }
+  const [empty] = await group.candidates({}, { query: '群:示例', signal })
+  assert.equal(empty.name, '没有匹配的飞书群聊')
+  assert.equal(group.onPick({ candidate: empty }), undefined)
+})

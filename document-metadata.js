@@ -7,7 +7,7 @@ export async function documentAuthors(results, searchArgs, signal, run) {
   const standalone = new Set()
   const possibleCreators = new Set()
   const tasks = []
-  const deadline = AbortSignal.timeout(3500)
+  const deadline = AbortSignal.timeout(900)
   const optional = signal ? AbortSignal.any([signal, deadline]) : deadline
 
   for (const result of results) {

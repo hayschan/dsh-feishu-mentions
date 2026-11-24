@@ -132,3 +132,9 @@ Search Feishu contacts, chats, Drive files and wiki spaces from the native DeepS
 ## License
 
 MIT covers the source and the original file-type artwork in this repository. This is a community plugin. [License](LICENSE)
+
+### 搜索响应
+
+2026-11-25 在离线客户端测试中，四类来源并行，每个模拟请求固定等待 40 毫秒。单次对照中，打开 `@` 从 287 毫秒降至 51 毫秒，首次输入关键词从 263 毫秒降至 144 毫秒，同会话立即重复搜索从 264 毫秒降至不足 1 毫秒，请求数从 4 降至 0。真实飞书延迟和桌面渲染仍需在实际使用中核验。
+
+每类来源在内存中保留当前会话最近写入的最多 32 组查询结果，有效期 15 秒。摘录正文仍在发送时读取。头像和作者补查最多等待约 900 毫秒，超时后展示姓名缩写或已有的所有者信息。

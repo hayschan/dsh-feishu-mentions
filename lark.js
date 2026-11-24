@@ -63,8 +63,10 @@ async function contactAvatars(users, signal, run) {
   if (!ids.length) return new Map()
   try {
     const params = JSON.stringify({ user_id_type: 'open_id', user_ids: ids })
+    const deadline = AbortSignal.timeout(900)
+    const optional = signal ? AbortSignal.any([signal, deadline]) : deadline
     const rows = await run(['api', 'GET', '/open-apis/contact/v3/users/batch', '--params', params,
-      '--jq', '{ok:.ok,data:{items:[.data.items[]|{open_id,avatar:.avatar.avatar_72}]}}'], signal)
+      '--jq', '{ok:.ok,data:{items:[.data.items[]|{open_id,avatar:.avatar.avatar_72}]}}'], optional)
     return new Map(rows.items.map(row => [row.open_id, avatarUrl(row.avatar)]))
   } catch {
     signal?.throwIfAborted()
@@ -87,6 +89,7 @@ export async function search(source, query, signal, run = cli) {
     case 'chat': {
       const action = query ? ['+chat-search', '--query', query, '--disable-search-by-user'] : ['+chat-list', '--sort', 'active_time']
       const data = await run(['im', ...action, ...page], signal)
+      if (data.chats === null) return []
       return data.chats.filter(c => c.chat_id && c.name).map(c => ({
         kind: 'chat', title: c.name, chat_id: c.chat_id, image: avatarUrl(c.avatar), detail: c.description?.slice(0, 70) || undefined,
       }))
@@ -122,8 +125,14 @@ export async function search(source, query, signal, run = cli) {
 
 const maxChars = 6000
 function bounded(text) {
-  const chars = Array.from(text)
-  return { text: chars.slice(0, maxChars).join(''), truncated: chars.length > maxChars }
+  let end = 0
+  let count = 0
+  for (const char of text) {
+    if (count === maxChars) return { text: text.slice(0, end), truncated: true }
+    end += char.length
+    count++
+  }
+  return { text, truncated: false }
 }
 
 export async function excerpt(params, signal, run = cli) {
