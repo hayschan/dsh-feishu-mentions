@@ -2,7 +2,7 @@
 
 周五要试产，你想确认还有哪些物料没到。在 DeepSeek Harness 输入 `@物料`，选中「试产物料跟踪表」，接着写「列出还没到齐的物料」。同一个输入框也能找群聊、同事、表格和知识空间。
 
-[安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
+[观看或保存 23 秒演示（1080p MP4）](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-mentions-demo.mp4) · [安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
 
 ## 引用文档，输入标题里的几个字
 
@@ -23,6 +23,16 @@
 </p>
 
 如果希望把评审纪要正文或最近的群消息也一起发给模型，选择 `@摘录:评审` 或 `@摘录:协调`。动图按飞书与 Harness 的界面和操作重绘，使用虚构的试产项目资料。[飞书的文档分享说明](https://www.feishu.cn/hc/zh-CN/articles/360049067526)
+
+<details>
+<summary>单独下载某个操作的视频（MP4）</summary>
+
+| 场景 | 手动复制 | 在对话框直接引用 |
+| --- | --- | --- |
+| 引用云文档 | [下载飞书操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-document-manual.mp4) | [下载 Harness 操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-document-direct.mp4) |
+| 引用群聊 | [下载飞书操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-chat-manual.mp4) | [下载 Harness 操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-chat-direct.mp4) |
+
+</details>
 
 ## 安装
 
