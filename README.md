@@ -1,8 +1,10 @@
 # DeepSeek Harness 飞书引用
 
+https://github.com/user-attachments/assets/fa061ee7-3d42-4357-915c-d74068a7d0e5
+
 周五要试产，你想确认还有哪些物料没到。在 DeepSeek Harness 输入 `@物料`，选中「试产物料跟踪表」，接着写「列出还没到齐的物料」。同一个输入框也能找群聊、同事、表格和知识空间。
 
-[观看或保存 35 秒演示（1080p MP4）](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-mentions-demo.mp4) · [安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
+[下载完整演示（35 秒 · 1080p MP4）](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-mentions-demo.mp4) · [安装插件](#安装) · [查看发布版本](https://github.com/hayschan/dsh-feishu-mentions/releases)
 
 ## 引用文档，输入标题里的几个字
 
@@ -32,6 +34,24 @@
 
 如果希望把评审纪要正文或最近的群消息也一起发给模型，选择 `@摘录:评审` 或 `@摘录:协调`。动图按飞书与 Harness 的界面和操作重绘，使用虚构的试产项目资料。[飞书的文档分享说明](https://www.feishu.cn/hc/zh-CN/articles/360049067526)
 
+## 把最近三天的聊天整理进交接文档
+
+交班前，到货进展散在飞书消息里，下一班要看的是《试产交接记录》。在 Harness 里用 `@` 选两次：先选消息来自哪个群或哪位同事，再选要写入的飞书云文档。
+
+**从群聊整理**　输入 `@协调` 选中「试产协调群」，再用 `@交接` 选中「试产交接记录」。
+
+> 把 @试产协调群 最近 3 天的消息汇总到 @试产交接记录 文末。分为「已确认」「待跟进」「待确认」，保留消息里提到的负责人和期限。
+
+**从私聊整理**　输入 `@lc` 选中产品工程部的「林澈」，目标文档仍选「试产交接记录」。
+
+> 把我和 @林澈 最近 3 天私聊里提到的物料进展追加到 @试产交接记录 文末。列出已到货物料、还要跟进的事项，以及林澈答应反馈的时间。
+
+<p align="center">
+  <a href="docs/images/recent-messages-to-doc.webp"><img src="docs/images/recent-messages-to-doc.webp" width="72%" alt="先选试产协调群，再选试产交接记录，写明最近三天。飞书文档末尾出现已确认、待跟进和待确认三项交接摘要。"></a>
+</p>
+
+这个案例使用普通 `@` 引用。Harness 需要能运行已登录的飞书 CLI，当前账号需能读取所选会话并编辑目标文档。插件传入会话和文档标识，Harness 按指定时间读取消息，再把摘要追加到文末。上图用虚构消息演示写入效果。
+
 <details>
 <summary>单独下载某个操作的视频（MP4）</summary>
 
@@ -40,6 +60,7 @@
 | 引用云文档 | [下载飞书操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-document-manual.mp4) | [下载 Harness 操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-document-direct.mp4) |
 | 引用群聊 | [下载飞书操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/feishu-chat-manual.mp4) | [下载 Harness 操作](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-chat-direct.mp4) |
 | 引用同事 | — | [下载姓名、全拼和首字母演示](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/harness-person-direct.mp4) |
+| 把近期消息汇总到文档 | — | [下载群聊交接示例](https://raw.githubusercontent.com/hayschan/dsh-feishu-mentions/main/docs/videos/recent-messages-to-doc.mp4) |
 
 </details>
 
