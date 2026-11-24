@@ -214,6 +214,67 @@ window.__ModuleLoader__.load({
       }
     }
 
+    const packageName = '@hayschan/dsh-feishu-mentions'
+    const installedName = '@local/dsh-feishu-mentions'
+
+    function unwrap(reply) {
+      if (!reply?.ok) throw new Error(reply?.error?.message || '无法连接插件管理器。')
+      return reply.value
+    }
+
+    async function check(manager) {
+      if (!manager) throw new Error('此工作区未提供插件管理服务。')
+      const bundles = unwrap(await manager.listBundles())
+      const installed = bundles.find(b => b.name === installedName && b.installed)
+      if (!installed) throw new Error('无法确定当前安装来源。')
+      if (installed.name !== packageName || installed.update !== 'registry') {
+        const info = unwrap(await manager.inspect(packageName, {}))
+        const latest = info.status === 'accepted' && info.version ? '，npm 版本 ' + info.version : '，暂时无法确认 npm 版本'
+        return { message: '已安装 ' + installed.version + latest + '。当前安装来源仅支持检查版本。' }
+      }
+      const list = unwrap(await manager.listVersions(packageName, {}))
+      if (list.status !== 'listed') throw new Error(list.reason || '无法读取版本列表。')
+      const next = list.versions.find(v => v.tags.includes('latest') && v.bundle && !v.prerelease && !v.incompatible && !v.deprecated)
+      return next ? { message: '已安装 ' + list.installed, version: next.version, registry: list.registry }
+        : { message: '已安装 ' + list.installed + '，暂无可用的稳定更新。' }
+    }
+
+    function UpdateRow({ manager }) {
+      const [state, setState] = React.useState({ message: '' })
+      const busy = React.useRef(false)
+      async function act() {
+        if (busy.current) return
+        busy.current = true
+        const target = state.version
+        setState({ busy: true, message: target ? '正在安装 ' + target : '正在检查…' })
+        try {
+          if (!target) {
+            setState(await check(manager))
+            return
+          }
+          const outcome = unwrap(await manager.updateBundle(packageName, target, {
+            registry: state.registry, requestId: crypto.randomUUID(),
+          }))
+          const result = outcome.result
+          if (outcome.step !== 'install' || result.version !== target || result.error) {
+            throw new Error('更新未完成，请在插件管理器核对当前版本。')
+          }
+          if (result.application === 'applied') setState({ message: target + ' 已安装并生效。' })
+          else if (result.application === 'restart-required') setState({ message: target + ' 已安装，重启 Harness 后生效。' })
+          else throw new Error('更新尚未生效，请查看插件管理器。')
+        } catch (error) {
+          setState({ message: error.message || '请重新检查插件状态。' })
+        } finally {
+          busy.current = false
+        }
+      }
+      return React.createElement('div', null,
+        React.createElement('strong', null, '飞书引用 '),
+        React.createElement('button', { type: 'button', disabled: state.busy, onClick: act },
+          state.version ? '确认安装 ' + state.version : '检查更新'),
+        React.createElement('span', { role: 'status' }, ' ' + state.message))
+    }
+
     return {
       inject: ['inputTriggers'],
       apply(ctx) {
@@ -223,6 +284,9 @@ window.__ModuleLoader__.load({
           document.head.append(style)
           return () => style.remove()
         })
+        ctx.slots?.inject('settings.general.item', () => ctx.slots.register({
+          name: 'settings.general.item', id: 'feishu-mentions.update', order: 110,
+        }, () => React.createElement(UpdateRow, { manager: ctx.remote?.pluginManager })))
         Object.keys(groups).forEach((key, index) => {
           ctx.effect(() => ctx.inputTriggers.registerSource(makeSource(key, index - 4)))
         })

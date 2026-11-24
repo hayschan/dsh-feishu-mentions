@@ -1,6 +1,7 @@
 node_modules/
 coverage/
 *.tgz
+dist/
 .env
 .env.*
 .DS_Store

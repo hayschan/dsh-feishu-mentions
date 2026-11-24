@@ -1,0 +1,59 @@
+name: Publish stable plugin
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Verify version and test
+        run: |
+          version=$(node -p "require('./package.json').version")
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$GITHUB_REF_NAME" == "v$version" ]]
+          TZ=Asia/Shanghai npm test
+          TZ=America/New_York npm test
+      - name: Build and test public package
+        run: node scripts/test-public.mjs dist
+      - name: Publish exact artifact to npm
+        run: |
+          version=$(node -p "require('./package.json').version")
+          file="dist/dsh-feishu-mentions-$version.tgz"
+          expected="sha512-$(openssl dgst -sha512 -binary "$file" | openssl base64 -A)"
+          endpoint="https://registry.npmjs.org/@hayschan%2fdsh-feishu-mentions/$version"
+          status=$(curl --retry 3 -sS -o /tmp/npm-version.json -w '%{http_code}' "$endpoint")
+          case "$status" in
+            200) test "$(jq -r .dist.integrity /tmp/npm-version.json)" = "$expected" ;;
+            404) npm publish "$file" --access public --provenance ;;
+            *) echo "npm registry returned $status"; exit 1 ;;
+          esac
+      - name: Publish the same artifact on GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          file="dist/dsh-feishu-mentions-${GITHUB_REF_NAME#v}.tgz"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            if gh release download "$GITHUB_REF_NAME" -p "$(basename "$file")" -D /tmp/existing; then
+              cmp "$file" "/tmp/existing/$(basename "$file")"
+            else
+              gh release upload "$GITHUB_REF_NAME" "$file"
+            fi
+          else
+            gh release create "$GITHUB_REF_NAME" "$file" --verify-tag --generate-notes
+          fi

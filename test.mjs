@@ -147,17 +147,17 @@ test('Host rejects unknown search source and overlong strings', async () => {
   }
 })
 
-async function clientSources(fetch, react = {}, dateClass = Date) {
+async function clientSources(fetch, react = {}, dateClass = Date, services = {}) {
   const sources = []
   const code = await readFile(new URL('./client.js', import.meta.url), 'utf8')
-  const ctx = { inputTriggers: { registerSource: s => sources.push(s) }, effect: f => f() }
+  const ctx = { ...services, inputTriggers: { registerSource: s => sources.push(s) }, effect: f => f() }
   runInNewContext(code, {
     window: { __ModuleLoader__: { load: m => m.factory(name => {
       assert.equal(name, 'react')
       return react
     }).apply(ctx) } },
     document: { baseURI: 'http://localhost/', createElement: () => ({}), head: { append() {} } },
-    URL, URLSearchParams, setTimeout, clearTimeout, fetch, Date: dateClass,
+    URL, URLSearchParams, setTimeout, clearTimeout, fetch, Date: dateClass, crypto: globalThis.crypto,
   })
   return sources
 }
@@ -314,4 +314,55 @@ test('malformed host replies are retryable and invalid wiki rows do not hide val
     {kind: 'docx', title: '示例', token: 'demo'}]}
   const rows = await ask()
   assert.deepEqual(Array.from(rows, r => r.name), ['示例'])
+})
+
+test('old draft references retain their source, labels and serialization', async () => {
+  const sources = await clientSources(assert.fail)
+  const source = sources.find(s => s.name === 'feishu-chat')
+  const oldRef = '{"kind":"chat","title":"读书群","chat_id":"oc_demo"}'
+  assert.equal(source.codec.clipboardText(oldRef), '@读书群')
+  assert.match(await source.codec.serialize(oldRef, signal), /oc_demo/)
+})
+
+test('settings checks only on demand, protects source links and confirms exact npm updates', async () => {
+  const { name } = JSON.parse(await readFile(new URL('./package.json', import.meta.url)))
+  let state = {message: ''}, render, installs = 0, checks = 0, linked = true
+  const busy = { current: false }
+  const react = {
+    useState: () => [state, next => { state = next }],
+    useRef: () => busy,
+    createElement: (type, props, ...children) => typeof type === 'function' ? type(props) : {type, props, children},
+  }
+  const ok = value => ({ok: true, value})
+  const manager = {
+    listBundles: () => { checks++; return ok([{name, installed: true, version: '0.5.0', update: linked ? undefined : 'registry'}]) },
+    inspect: () => ok({status: 'accepted', version: '0.5.1'}),
+    listVersions: () => ok({status: 'listed', installed: '0.5.0', registry: null, versions: [
+      {version: '0.5.2', tags: ['beta'], bundle: true}, {version: '0.5.1', tags: ['latest'], bundle: true},
+    ]}),
+    updateBundle: (target, version) => {
+      installs++
+      assert.equal(target, '@hayschan/dsh-feishu-mentions')
+      assert.equal(version, '0.5.1')
+      return ok({step: 'install', result: {application: 'restart-required', version}})
+    },
+  }
+  await clientSources(assert.fail, react, Date, {
+    remote: {pluginManager: manager},
+    slots: {inject: (_, callback) => callback(), register: (_, component) => { render = component }},
+  })
+  const click = () => render().children[1].props.onClick()
+  assert.equal(checks, 0)
+  await click()
+  assert.match(state.message, /仅支持检查/)
+  assert.equal(state.version, undefined)
+  if (name === '@hayschan/dsh-feishu-mentions') {
+    linked = false
+    await click()
+    assert.equal(installs, 0)
+    assert.equal(state.version, '0.5.1')
+    await click()
+    assert.equal(installs, 1)
+    assert.match(state.message, /重启/)
+  }
 })

@@ -67,13 +67,15 @@ https://github.com/user-attachments/assets/fa061ee7-3d42-4357-915c-d74068a7d0e5
 ## 安装
 
 1. 准备 DeepSeek Harness（已在 `0.2.2-rc.5` 验证）和飞书官方 CLI（已在 `1.0.97` 验证）。按官方 CLI 说明配置应用，登录自己的飞书账号，运行 `lark-cli auth status` 核对用户身份。读取范围取决于应用权限和当前用户可以访问的资料。[飞书 CLI 安装与授权](https://github.com/larksuite/cli)
-2. 在桌面版打开 **插件 → 添加插件**，粘贴下面的安装地址，点击 **安装 → 立即启用**。其他版本的安装包见 [Releases](https://github.com/hayschan/dsh-feishu-mentions/releases)。
+2. v0.5.0 首次发布到 npm 后，在桌面版打开 **插件 → 添加插件**，填入下面的 npm 包名，点击 **安装 → 立即启用**。首次 npm 发布前，可用 v0.4.1 的 .tgz 下载地址安装。各版本安装包见 [Releases](https://github.com/hayschan/dsh-feishu-mentions/releases)。
 
    ```text
-   https://github.com/hayschan/dsh-feishu-mentions/releases/download/v0.4.1/dsh-feishu-mentions-0.4.1.tgz
+   @hayschan/dsh-feishu-mentions
    ```
 
 3. 打开一个工作区，输入 `@`。看到飞书联系人、群聊和云盘资料后，选中一项就可以开始提问。
+
+**更新**　在「设置 → 通用 → 飞书引用」点「检查更新」。按 npm 包名安装的用户可以确认安装兼容的稳定新版，界面会报告是否需要重启。开发链接仅查询版本。旧版安装包用户请在插件管理器移除旧插件，再用上面的包名安装。两个版本使用相同的引用来源和引用数据格式。
 
 <details>
 <summary>菜单提示找不到飞书 CLI？</summary>
@@ -119,7 +121,7 @@ npm test
 npm pack --dry-run
 ```
 
-开发时可在 Harness 插件管理器中添加克隆目录的绝对路径。包名 `@local/dsh-feishu-mentions` 是 Harness 用来识别插件和已有引用的标识。插件运行时使用 Node.js 内置模块和宿主提供的 React。
+开发时可在 Harness 插件管理器中添加克隆目录的绝对路径。开发链接保留包名 `@local/dsh-feishu-mentions`，公开打包时将清单、Cordis 和客户端模块标识统一为 npm 包名。插件运行时使用 Node.js 内置模块和宿主提供的 React。
 
 </details>
 
@@ -127,7 +129,7 @@ npm pack --dry-run
 
 ## English quick start
 
-Search Feishu contacts, chats, Drive files and wiki spaces from the native DeepSeek Harness `@` menu. Sign in to the official Feishu CLI with your own user identity, then paste the release tarball URL above into **Plugins → Add plugin** in Harness and enable it. Type `@` to browse or `@keyword` to search. Selecting an ordinary result attaches a reference. The explicit `@摘录:keyword` option also includes a document excerpt or recent chat messages when you send. The picker currently uses Chinese labels.
+Search Feishu contacts, chats, Drive files and wiki spaces from the native DeepSeek Harness `@` menu. Sign in to the official Feishu CLI with your own user identity, then enter the npm package name above into **Plugins → Add plugin** in Harness and enable it. Type `@` to browse or `@keyword` to search. Selecting an ordinary result attaches a reference. The explicit `@摘录:keyword` option also includes a document excerpt or recent chat messages when you send. The picker currently uses Chinese labels.
 
 ## License
 
@@ -140,3 +142,8 @@ MIT covers the source and the original file-type artwork in this repository. Thi
 每类来源在内存中保留当前会话最近写入的最多 32 组查询结果，有效期 15 秒。摘录正文仍在发送时读取。头像和作者补查最多等待约 900 毫秒，超时后展示姓名缩写或已有的所有者信息。
 
 2026-11-25 离线异常数据回归覆盖联系人、群聊、云盘和知识空间。搜索成功但列表缺失或为 null 时按空列表显示，单条异常记录会跳过；列表类型错误时显示读取提示。群聊摘录遇到无法解析的消息内容时提示错误。验证使用合成 CLI 与插件 Host 回包，实际桌面和不同 CLI 版本仍需联调。
+
+
+### 维护者发布
+
+公开包名为 `@hayschan/dsh-feishu-mentions`。运行 `node scripts/test-public.mjs dist` 验证准备发布的安装包。首次发布由有权使用该 npm scope 的维护者执行 `npm publish dist/dsh-feishu-mentions-0.5.0.tgz --access public`。在 npm 包的 Trusted Publisher 设置选择 GitHub Actions，仓库填 `hayschan/dsh-feishu-mentions`，工作流填 `release.yml`。后续更新 package.json 版本，提交并推送相同版本的 `vX.Y.Z` 标签。工作流验证版本、运行回归测试，将同一 tgz 发布到 npm 和 GitHub Release。可在同一标签上重跑，已发布的 npm 版本须通过完整性比对。

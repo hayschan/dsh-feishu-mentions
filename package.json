@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-feishu-mentions",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Feishu references in the DeepSeek Harness composer",
   "private": true,
   "type": "module",
@@ -36,7 +36,8 @@
       "platform": "web",
       "immediately": true,
       "inject": [
-        "@deepseek-ai/dsh-client-ui-input-trigger"
+        "@deepseek-ai/dsh-client-ui-input-trigger",
+        "@deepseek-ai/dsh-client-ui-settings"
       ]
     }
   },
